@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/amsen20/ecmus/internal/ankubedsm" // Your custom package
 	"github.com/amsen20/ecmus/internal/config"
 	"github.com/amsen20/ecmus/internal/connector"
 	"github.com/amsen20/ecmus/internal/gui"
@@ -22,9 +23,31 @@ var log = logging.Get()
 
 func main() {
 	config_file_path := flag.String("config_file", "", "Path to config file")
+	runAnKubeDSM := flag.Bool("ankubedsm", false, "Run with AN-KubeDSM extension logic")
 	flag.Parse()
 
-	fmt.Println(*config_file_path)
+	if *runAnKubeDSM {
+		fmt.Println("[AN-KubeDSM] Running custom sensitivity-aware & heterogeneous evaluation mode...")
+		
+		// Quick verification of our heterogeneous nodes and priority weights
+		nodes := []ankubedsm.NodeInfo{
+			{Id: "core-edge-8ms", IsCloud: false, FreeCPU: 12.0, Latency: ankubedsm.CoreEdgeLatency},
+			{Id: "cloud-100ms", IsCloud: true, FreeCPU: 100.0, Latency: ankubedsm.CloudLatency},
+		}
+
+		assignedNode, latency, success := ankubedsm.SelectOptimalNodeExternal("critical-service", 1.0, 2.0, nodes)
+		if success {
+			fmt.Printf("[AN-KubeDSM] Test Placement -> Node: %s, Latency: %.0f ms, Weight w[i]: %.1f\n", 
+				assignedNode, latency, ankubeGetWeight(1.0))
+		}
+		return
+	}
+
+	if *config_file_path == "" {
+		log.Error().Msg("config_file flag is required")
+		os.Exit(1)
+	}
+
 	yamlFile, err := os.ReadFile(*config_file_path)
 	if err != nil {
 		log.Err(err).Msgf("could not load config")
@@ -36,11 +59,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// The cluster state will be shared between connector and scheduler.
 	clusterState := model.NewClusterState()
 
 	var c connector.Connector
-	// Initialize the connector with the connector kind mentioned in config.
 	switch config.SchedulerGeneralConfig.ConnectorKind {
 	case "const":
 		c = connector.NewConstantConnector(clusterState)
@@ -67,9 +88,6 @@ func main() {
 	}
 
 	schedulerContext := context.Background()
-
-	// Scheduler's bridge is a way for other goroutines to ask
-	// the scheduler for getting snapshots of the current state.
 	schedulerBridge, err := sched.Run(schedulerContext)
 	if err != nil {
 		log.Err(err).Msg("could not run scheduler")
@@ -79,15 +97,17 @@ func main() {
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 
-	// Setup statistics.
 	statistics.Init()
 	statistics.Set("restarts", 0)
 
-	// Simple gui in web-server for checking state's status.
 	gui.SetUp(schedulerBridge)
 	go gui.Run()
 
 	<-signalChannel
 	log.Info().Msgf("exiting gracefully...")
 	log.Info().Msgf("\n%s", statistics.Display())
+}
+
+func ankubeGetWeight(nu float64) float64 {
+	return ankubedsm.GetServiceWeight(nu)
 }

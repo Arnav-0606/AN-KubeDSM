@@ -1,0 +1,5 @@
+PodId,SensitivityNu,BaselineNode,BaselineLatency,AnKubeNode,AnKubeLatency
+backup-job-1,0.0,core-edge (8ms),8.0,cloud-dc (100ms),100.0
+log-processor,0.0,core-edge (8ms),8.0,cloud-dc (100ms),100.0
+auth-service,1.0,metro-edge (12ms),12.0,core-edge (8ms),8.0
+telemetry-collector,1.0,metro-edge (12ms),12.0,core-edge (8ms),8.0

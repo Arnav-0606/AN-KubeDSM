@@ -4,7 +4,7 @@ resource_count: 2
 batch_size: 10
 maximum_migrations: 3
 maximum_cloud_offload: 5
-connector: kubernetes
+connector: const
 connector_config: ./config
 flush_period_duration: 1000
 cloud_suggest_duration: 1000

@@ -95,12 +95,10 @@ pods:
 	}
 }
 
-func Start() {
+func Start(algorithmChoice string) {
 	var testingAlgorithm algorithmType
 
-	var choice string
-	fmt.Scan(&choice)
-	if choice == "QASRE" {
+	if algorithmChoice == "QASRE" {
 		testingAlgorithm = QASRE
 	} else {
 		testingAlgorithm = KUBERNETES_DEFAULT
@@ -108,7 +106,10 @@ func Start() {
 
 	jsonFile, err := os.Open("./sim/scenario.json")
 	if err != nil {
-		panic(err)
+		jsonFile, err = os.Open("scenario.json")
+		if err != nil {
+			panic(err)
+		}
 	}
 	defer jsonFile.Close()
 
@@ -161,5 +162,11 @@ func Start() {
 
 	content, _ := json.MarshalIndent(report, "", " ")
 
-	_ = ioutil.WriteFile(fmt.Sprintf("./sim/%s.json", choice), content, 0644)
+	_ = ioutil.WriteFile(fmt.Sprintf("./sim/%s.json", algorithmChoice), content, 0644)
+}
+
+// ResetReport clears accumulated metrics between simulation runs
+func ResetReport() {
+	report.QoS = nil
+	report.Edge = nil
 }

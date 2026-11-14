@@ -1,0 +1,7 @@
+PodId,SensitivityNu,BaselineNode,BaselineLatency,AnKubeNode,AnKubeLatency,AnKubeQoS
+auth-service,1.0,core-edge (8ms),8.0,core-edge (8ms),8.0,1.73
+telemetry-collector,1.0,core-edge (8ms),8.0,core-edge (8ms),8.0,1.73
+api-gateway,0.5,core-edge (8ms),8.0,core-edge (8ms),8.0,1.30
+user-portal,0.5,core-edge (8ms),8.0,core-edge (8ms),8.0,1.30
+log-processor,0.0,core-edge (8ms),8.0,core-edge (8ms),8.0,0.87
+backup-job,0.0,core-edge (8ms),8.0,core-edge (8ms),8.0,0.87
